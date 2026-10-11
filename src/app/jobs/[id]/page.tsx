@@ -1,23 +1,71 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getJob } from "@/actions/jobs";
 import { auth } from "@/lib/auth";
 import { ApplyButton } from "./apply-button";
 
-export default async function JobDetailPage({
+async function JobDetail({ id }: { id: string }) {
+  const job = await getJob(id);
+  if (!job) notFound();
+
+  const session = await auth();console.log("JOB DETAIL SESSION:", JSON.stringify(session, null, 2));
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  const isSeeker = role === "SEEKER";
+  const isLoggedIn = !!session?.user;
+
+  return (
+    <div className="bg-white rounded-lg shadow p-8 mt-4">
+      <h1 className="text-3xl font-bold mb-2">{job.title}</h1>
+      <p className="text-gray-600 mb-6">
+        {job.employer.name} · {job.location}
+      </p>
+
+      {job.salaryMin && job.salaryMax && (
+        <p className="text-lg text-green-700 mb-6">
+          ${job.salaryMin.toLocaleString()} – ${job.salaryMax.toLocaleString()}
+        </p>
+      )}
+
+      <h2 className="font-semibold mb-2">Description</h2>
+      <p className="whitespace-pre-wrap text-gray-800 mb-8">
+        {job.description}
+      </p>
+
+      {isSeeker && <ApplyButton jobId={job.id} />}
+
+      {!isLoggedIn && (
+        <div className="border-t pt-6 text-sm text-gray-600">
+          <Link href="/login" className="text-blue-600 hover:underline">
+            Log in
+          </Link>{" "}
+          as a job seeker to apply.
+        </div>
+      )}
+
+      {isLoggedIn && !isSeeker && (
+        <div className="border-t pt-6 text-sm text-gray-600">
+          Only job seekers can apply to positions.
+        </div>
+      )}
+    </div>
+  );
+}
+
+async function JobDetailWrapper({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const job = await getJob(id);
+  return <JobDetail id={id} />;
+}
 
-  if (!job) notFound();
-
-  const session = await auth();
-  const role = (session?.user as { role?: string } | undefined)?.role;
-  const isSeeker = role === "SEEKER";
-
+export default function JobDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b">
@@ -34,41 +82,9 @@ export default async function JobDetailPage({
         <Link href="/jobs" className="text-blue-600 text-sm hover:underline">
           ← Back to jobs
         </Link>
-
-        <div className="bg-white rounded-lg shadow p-8 mt-4">
-          <h1 className="text-3xl font-bold mb-2">{job.title}</h1>
-          <p className="text-gray-600 mb-6">
-            {job.employer.name} · {job.location}
-          </p>
-
-          {job.salaryMin && job.salaryMax && (
-            <p className="text-lg text-green-700 mb-6">
-              ${job.salaryMin.toLocaleString()} – ${job.salaryMax.toLocaleString()}
-            </p>
-          )}
-
-          <h2 className="font-semibold mb-2">Description</h2>
-          <p className="whitespace-pre-wrap text-gray-800 mb-8">
-            {job.description}
-          </p>
-
-          {isSeeker && <ApplyButton jobId={job.id} />}
-
-          {!session?.user && (
-            <div className="border-t pt-6 text-sm text-gray-600">
-              <Link href="/login" className="text-blue-600 hover:underline">
-                Log in
-              </Link>{" "}
-              as a job seeker to apply.
-            </div>
-          )}
-
-          {session?.user && !isSeeker && (
-            <div className="border-t pt-6 text-sm text-gray-600">
-              Only job seekers can apply to positions.
-            </div>
-          )}
-        </div>
+        <Suspense fallback={<div className="text-gray-500 mt-4">Loading job...</div>}>
+          <JobDetailWrapper params={params} />
+        </Suspense>
       </main>
     </div>
   );

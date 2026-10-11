@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { Logo } from "@/components/logo";
 import Link from "next/link";
 import { getJobs } from "@/actions/jobs";
 
@@ -44,7 +45,7 @@ export default function JobsPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold">Orspex Jobs</Link>
+          <Logo />
           <nav className="flex gap-4 text-sm">
             <Link href="/jobs" className="text-blue-600 font-medium">Jobs</Link>
             <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">Dashboard</Link>

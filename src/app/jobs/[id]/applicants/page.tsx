@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getJobWithApplicants } from "@/actions/jobs";
 import { auth } from "@/lib/auth";
+import { Logo } from "@/components/logo";
 import { ApplicantRow } from "./applicant-row";
 
 async function ApplicantsList({ id }: { id: string }) {
@@ -63,7 +64,7 @@ export default function ApplicantsPage({
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold">Orspex Jobs</Link>
+          <Logo />
           <nav className="flex gap-4 text-sm">
             <Link href="/jobs" className="text-gray-600 hover:text-gray-900">Jobs</Link>
             <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">Dashboard</Link>

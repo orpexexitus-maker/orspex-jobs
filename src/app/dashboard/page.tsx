@@ -1,12 +1,13 @@
-﻿import { Suspense } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { auth } from "@/lib/auth";
 import { signOutAction } from "@/actions/auth";
 import { getMyApplications, getMyJobs } from "@/actions/jobs";
+import { Logo } from "@/components/logo";
 
-async function SeekerDashboard({ userId }: { userId: string }) {
+async function SeekerDashboard() {
   const applications = await getMyApplications();
 
   const STATUS_COLORS: Record<string, string> = {
@@ -58,7 +59,7 @@ async function SeekerDashboard({ userId }: { userId: string }) {
   );
 }
 
-async function EmployerDashboard({ userId }: { userId: string }) {
+async function EmployerDashboard() {
   const jobs = await getMyJobs();
 
   return (
@@ -119,13 +120,12 @@ async function DashboardContent() {
   if (!session?.user) redirect("/login");
 
   const role = (session.user as { role?: string }).role;
-  const userId = session.user.id as string;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold">Orspex Jobs</Link>
+          <Logo />
           <nav className="flex gap-4 text-sm">
             <Link href="/jobs" className="text-gray-600 hover:text-gray-900">Jobs</Link>
             <Link href="/dashboard" className="text-blue-600 font-medium">Dashboard</Link>
@@ -154,8 +154,8 @@ async function DashboardContent() {
           </div>
 
           <div className="border-t pt-6">
-            {role === "SEEKER" && <SeekerDashboard userId={userId} />}
-            {role === "EMPLOYER" && <EmployerDashboard userId={userId} />}
+            {role === "SEEKER" && <SeekerDashboard />}
+            {role === "EMPLOYER" && <EmployerDashboard />}
           </div>
         </div>
       </main>
@@ -165,7 +165,13 @@ async function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 p-8 text-center text-gray-500">Loading dashboard...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 p-8 text-center text-gray-500">
+          Loading dashboard...
+        </div>
+      }
+    >
       <DashboardContent />
     </Suspense>
   );

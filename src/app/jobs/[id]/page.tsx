@@ -3,13 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getJob } from "@/actions/jobs";
 import { auth } from "@/lib/auth";
+import { Logo } from "@/components/logo";
 import { ApplyButton } from "./apply-button";
 
 async function JobDetail({ id }: { id: string }) {
   const job = await getJob(id);
   if (!job) notFound();
 
-  const session = await auth();console.log("JOB DETAIL SESSION:", JSON.stringify(session, null, 2));
+  const session = await auth();
   const role = (session?.user as { role?: string } | undefined)?.role;
   const isSeeker = role === "SEEKER";
   const isLoggedIn = !!session?.user;
@@ -70,7 +71,7 @@ export default function JobDetailPage({
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold">Orspex Jobs</Link>
+          <Logo />
           <nav className="flex gap-4 text-sm">
             <Link href="/jobs" className="text-gray-600 hover:text-gray-900">Jobs</Link>
             <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">Dashboard</Link>

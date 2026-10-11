@@ -8,29 +8,15 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum Role {
-  SEEKER
-  EMPLOYER
-}
-
-enum ApplicationStatus {
-  APPLIED
-  REVIEWING
-  INTERVIEW
-  HIRED
-  REJECTED
-}
-
 model User {
   id           String        @id @default(cuid())
   email        String        @unique
   name         String
-  passwordHash String
   role         Role
   createdAt    DateTime      @default(now())
-
-  jobs         Job[]         @relation("EmployerJobs")
+  passwordHash String
   applications Application[] @relation("SeekerApplications")
+  jobs         Job[]         @relation("EmployerJobs")
 }
 
 model Job {
@@ -42,25 +28,38 @@ model Job {
   salaryMax    Int?
   isActive     Boolean       @default(true)
   employerId   String
-  employer     User          @relation("EmployerJobs", fields: [employerId], references: [id])
-  applications Application[]
   createdAt    DateTime      @default(now())
+  applications Application[]
+  employer     User          @relation("EmployerJobs", fields: [employerId], references: [id])
 
   @@index([location])
   @@index([isActive])
 }
 
 model Application {
-  id         String            @id @default(cuid())
-  jobId      String
-  seekerId   String
-  status     ApplicationStatus @default(APPLIED)
-  coverNote  String?
-  job        Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  seeker     User              @relation("SeekerApplications", fields: [seekerId], references: [id], onDelete: Cascade)
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
+  id        String            @id @default(cuid())
+  jobId     String
+  seekerId  String
+  status    ApplicationStatus @default(APPLIED)
+  coverNote String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  job       Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  seeker    User              @relation("SeekerApplications", fields: [seekerId], references: [id], onDelete: Cascade)
 
   @@unique([jobId, seekerId])
   @@index([status])
+}
+
+enum Role {
+  SEEKER
+  EMPLOYER
+}
+
+enum ApplicationStatus {
+  APPLIED
+  REVIEWING
+  INTERVIEW
+  HIRED
+  REJECTED
 }

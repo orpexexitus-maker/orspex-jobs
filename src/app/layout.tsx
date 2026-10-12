@@ -60,7 +60,7 @@ export const metadata: Metadata = {
 
   // ⚠️ Replace the value below with the code from Google Search Console
   verification: {
-    google: "REPLACE_WITH_YOUR_GOOGLE_VERIFICATION_CODE",
+    google: "7hrdmkpelJvnCzvdVucP78Fp_mSRRFqVUJDTbeybD3o",
   },
 
   openGraph: {

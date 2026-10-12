@@ -1,0 +1,16 @@
+# Orspex Jobs
+
+> A free job board connecting job seekers with employers. No fees, no games, just real work.
+
+## What this site offers
+- Free job postings for employers
+- One-click applications for job seekers
+- Application tracking dashboard
+- No subscription fees
+
+## Key pages
+- [Home](https://orspex-jobs-seeking.vercel.app/): Landing page
+- [Browse Jobs](https://orspex-jobs-seeking.vercel.app/jobs): All open positions
+- [Post a Job](https://orspex-jobs-seeking.vercel.app/jobs/new): For employers
+- [Login](https://orspex-jobs-seeking.vercel.app/login): Sign in
+- [Register](https://orspex-jobs-seeking.vercel.app/register): Create an account

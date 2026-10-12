@@ -7,17 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma skills sync || exit 0",
-    "contract:emit": "prisma contract emit"
+    "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@indhu_hehhehe/wave-background": "^1.0.1",
     "@prisma/client": "^6.19.3",
-    "@prisma/orm-postgres": "^8.0.0-rc.17",
     "@tailwindcss/postcss": "^4.3.3",
     "bcryptjs": "^3.0.3",
-    "dotenv": "^18.0.7",
-    "liquid-animated-background": "^1.0.2",
     "next": "16.4.0",
     "next-auth": "^5.0.0-beta.32",
     "prisma": "^6.19.3",
@@ -26,7 +21,6 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
-    "@prisma/cli-engine": "^0.7.0",
     "@tailwindcss/turbopack": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",

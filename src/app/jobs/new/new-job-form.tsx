@@ -18,37 +18,110 @@ export function NewJobForm() {
 
       <form action={formAction} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Job title</label>
-          <input name="title" type="text" required className="w-full border rounded px-3 py-2" />
+          <label className="block text-sm font-medium mb-1">Job title *</label>
+          <input
+            name="title"
+            type="text"
+            required
+            className="w-full border rounded px-3 py-2"
+          />
           {state.fieldErrors?.title && (
-            <p className="text-red-600 text-xs mt-1">{state.fieldErrors.title}</p>
+            <p className="text-red-600 text-xs mt-1">
+              {state.fieldErrors.title}
+            </p>
           )}
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Country *</label>
+            <input
+              name="country"
+              type="text"
+              required
+              placeholder="e.g. Philippines"
+              className="w-full border rounded px-3 py-2"
+            />
+            {state.fieldErrors?.country && (
+              <p className="text-red-600 text-xs mt-1">
+                {state.fieldErrors.country}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">City *</label>
+            <input
+              name="city"
+              type="text"
+              required
+              placeholder="e.g. Makati"
+              className="w-full border rounded px-3 py-2"
+            />
+            {state.fieldErrors?.city && (
+              <p className="text-red-600 text-xs mt-1">
+                {state.fieldErrors.city}
+              </p>
+            )}
+          </div>
+        </div>
+
         <div>
-          <label className="block text-sm font-medium mb-1">Location</label>
-          <input name="location" type="text" required placeholder="e.g. Dubai, UAE" className="w-full border rounded px-3 py-2" />
+          <label className="block text-sm font-medium mb-1">
+            Location (short) *
+          </label>
+          <input
+            name="location"
+            type="text"
+            required
+            placeholder="e.g. Makati, Philippines"
+            className="w-full border rounded px-3 py-2"
+          />
           {state.fieldErrors?.location && (
-            <p className="text-red-600 text-xs mt-1">{state.fieldErrors.location}</p>
+            <p className="text-red-600 text-xs mt-1">
+              {state.fieldErrors.location}
+            </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Description</label>
-          <textarea name="description" required rows={6} className="w-full border rounded px-3 py-2" placeholder="Describe the role, responsibilities, and requirements..." />
+          <label className="block text-sm font-medium mb-1">Description *</label>
+          <textarea
+            name="description"
+            required
+            rows={6}
+            className="w-full border rounded px-3 py-2"
+            placeholder="Describe the role, responsibilities, and requirements..."
+          />
           {state.fieldErrors?.description && (
-            <p className="text-red-600 text-xs mt-1">{state.fieldErrors.description}</p>
+            <p className="text-red-600 text-xs mt-1">
+              {state.fieldErrors.description}
+            </p>
           )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Salary min (optional)</label>
-            <input name="salaryMin" type="number" min="0" className="w-full border rounded px-3 py-2" />
+            <label className="block text-sm font-medium mb-1">
+              Salary min (optional)
+            </label>
+            <input
+              name="salaryMin"
+              type="number"
+              min="0"
+              className="w-full border rounded px-3 py-2"
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Salary max (optional)</label>
-            <input name="salaryMax" type="number" min="0" className="w-full rounded px-3 py-2 border" />
+            <label className="block text-sm font-medium mb-1">
+              Salary max (optional)
+            </label>
+            <input
+              name="salaryMax"
+              type="number"
+              min="0"
+              className="w-full border rounded px-3 py-2"
+            />
           </div>
         </div>
 

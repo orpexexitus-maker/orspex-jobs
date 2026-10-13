@@ -9,6 +9,8 @@ import { auth } from "@/lib/auth";
 const jobSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(20, "Description must be at least 20 characters"),
+  country: z.string().min(2, "Country is required"),
+  city: z.string().min(2, "City is required"),
   location: z.string().min(2, "Location is required"),
   salaryMin: z.coerce.number().int().positive().optional(),
   salaryMax: z.coerce.number().int().positive().optional(),
@@ -34,6 +36,8 @@ export async function createJob(
   const parsed = jobSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description"),
+    country: formData.get("country"),
+    city: formData.get("city"),
     location: formData.get("location"),
     salaryMin: formData.get("salaryMin") || undefined,
     salaryMax: formData.get("salaryMax") || undefined,

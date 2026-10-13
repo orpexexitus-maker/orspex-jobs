@@ -20,7 +20,16 @@ async function SeekerDashboard() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">My applications</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">My applications</h2>
+        <Link
+          href="/profile"
+          className="text-blue-600 text-sm hover:underline font-medium"
+        >
+          Edit profile →
+        </Link>
+      </div>
+
       {applications.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           You haven&apos;t applied to any jobs yet.{" "}

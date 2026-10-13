@@ -8,49 +8,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id           String        @id @default(cuid())
-  email        String        @unique
-  name         String
-  role         Role
-  createdAt    DateTime      @default(now())
-  passwordHash String
-  applications Application[] @relation("SeekerApplications")
-  jobs         Job[]         @relation("EmployerJobs")
-}
-
-model Job {
-  id           String        @id @default(cuid())
-  title        String
-  description  String
-  location     String
-  salaryMin    Int?
-  salaryMax    Int?
-  isActive     Boolean       @default(true)
-  employerId   String
-  createdAt    DateTime      @default(now())
-  applications Application[]
-  employer     User          @relation("EmployerJobs", fields: [employerId], references: [id])
-
-  @@index([location])
-  @@index([isActive])
-}
-
-model Application {
-  id        String            @id @default(cuid())
-  jobId     String
-  seekerId  String
-  status    ApplicationStatus @default(APPLIED)
-  coverNote String?
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-  job       Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  seeker    User              @relation("SeekerApplications", fields: [seekerId], references: [id], onDelete: Cascade)
-
-  @@unique([jobId, seekerId])
-  @@index([status])
-}
-
 enum Role {
   SEEKER
   EMPLOYER
@@ -62,4 +19,123 @@ enum ApplicationStatus {
   INTERVIEW
   HIRED
   REJECTED
+}
+
+enum Currency {
+  USD
+  EUR
+  GBP
+  AED
+  SAR
+  QAR
+  KWD
+  BHD
+  OMR
+  JOD
+  INR
+  PKR
+  NGN
+  ZAR
+  EGP
+  KES
+  GHS
+  JPY
+  CNY
+  AUD
+  CAD
+  BRL
+  MXN
+}
+
+enum JobPriority {
+  ROUTINE
+  IMPORTANT
+  URGENT
+  IMMEDIATE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role
+  createdAt    DateTime @default(now())
+
+  // Seeker profile fields
+  phone        String?
+  country      String?
+  city         String?
+  bio          String?
+  skills       String[]
+  experience   Int?
+  education    String?
+  resumeUrl    String?
+
+  // Relations
+  company      Company?
+  jobs         Job[]         @relation("EmployerJobs")
+  applications Application[] @relation("SeekerApplications")
+}
+
+model Company {
+  id              String   @id @default(cuid())
+  name            String
+  country         String
+  city            String
+  registrationNo  String?
+  website         String?
+  emailDomain     String?
+  emailVerified   Boolean  @default(false)
+  docVerified     Boolean  @default(false)
+  docUrl          String?
+  verified        Boolean  @default(false)
+  ownerId         String   @unique
+  owner           User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  jobs            Job[]
+  createdAt       DateTime @default(now())
+}
+
+model Job {
+  id              String        @id @default(cuid())
+  title           String
+  description     String
+  country         String
+  city            String
+  location        String
+  salaryMin       Int?
+  salaryMax       Int?
+  salaryCurrency  Currency      @default(USD)
+  priority        JobPriority   @default(ROUTINE)
+  isActive        Boolean       @default(true)
+
+  employerId      String
+  employer        User          @relation("EmployerJobs", fields: [employerId], references: [id])
+
+  companyId       String?
+  company         Company?      @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  applications    Application[]
+  createdAt       DateTime      @default(now())
+
+  @@index([country])
+  @@index([city])
+  @@index([isActive])
+  @@index([priority])
+}
+
+model Application {
+  id         String            @id @default(cuid())
+  jobId      String
+  seekerId   String
+  status     ApplicationStatus @default(APPLIED)
+  coverNote  String?
+  resumeUrl  String?
+  job        Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  seeker     User              @relation("SeekerApplications", fields: [seekerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  @@unique([jobId, seekerId])
+  @@index([status])
 }

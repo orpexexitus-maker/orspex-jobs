@@ -1,23 +1,37 @@
 import { Suspense } from "react";
 import { Logo } from "@/components/logo";
 import Link from "next/link";
-import { getJobs } from "@/actions/jobs";
+import { getJobs, getJobFilterOptions } from "@/actions/jobs";
 import { auth } from "@/lib/auth";
 import { formatSalary, timeAgo } from "@/lib/format";
+import { JobsFilters } from "./jobs-filters";
 
-async function JobsList() {
+type SearchParams = {
+  q?: string;
+  country?: string;
+  city?: string;
+  title?: string;
+};
+
+async function JobsList({ searchParams }: { searchParams: SearchParams }) {
   const session = await auth();
-  const jobs = await getJobs();
+  const jobs = await getJobs(searchParams);
+
+  const isSeeker = session?.user?.role === "SEEKER";
 
   if (jobs.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-        No jobs posted yet. Check back soon.
+      <div className="bg-white rounded-lg shadow p-8 text-center">
+        <p className="text-gray-500 mb-4">No jobs match your filters.</p>
+        <Link
+          href="/jobs"
+          className="text-blue-600 hover:underline text-sm font-medium"
+        >
+          Clear all filters
+        </Link>
       </div>
     );
   }
-
-  const isSeeker = session?.user?.role === "SEEKER";
 
   return (
     <div className="space-y-4">
@@ -27,10 +41,7 @@ async function JobsList() {
           className="bg-white rounded-lg shadow hover:shadow-md transition p-6"
         >
           <div className="flex items-start justify-between gap-6">
-            <Link
-              href={`/jobs/${job.id}`}
-              className="flex-1 min-w-0 block"
-            >
+            <Link href={`/jobs/${job.id}`} className="flex-1 min-w-0 block">
               <h2 className="text-xl font-semibold mb-1 hover:text-blue-600 transition-colors">
                 {job.title}
               </h2>
@@ -79,7 +90,50 @@ async function JobsList() {
   );
 }
 
-export default function JobsPage() {
+async function JobsContent({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const [options, jobs] = await Promise.all([
+    getJobFilterOptions(),
+    getJobs(searchParams),
+  ]);
+  const total = jobs.length;
+
+  return (
+    <main className="max-w-4xl mx-auto px-4 py-8">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">Open positions</h1>
+        <p className="text-gray-600">
+          {total} {total === 1 ? "job" : "jobs"} available
+        </p>
+      </div>
+
+      <JobsFilters
+        options={options}
+        currentFilters={{
+          q: searchParams.q ?? "",
+          country: searchParams.country ?? "",
+          city: searchParams.city ?? "",
+          title: searchParams.title ?? "",
+        }}
+      />
+
+      <Suspense fallback={<div className="text-gray-500">Loading jobs...</div>}>
+        <JobsList searchParams={searchParams} />
+      </Suspense>
+    </main>
+  );
+}
+
+export default async function JobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b">
@@ -96,13 +150,7 @@ export default function JobsPage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-2">Open positions</h1>
-        <p className="text-gray-600 mb-8">Browse available jobs</p>
-        <Suspense fallback={<div className="text-gray-500">Loading jobs...</div>}>
-          <JobsList />
-        </Suspense>
-      </main>
+      <JobsContent searchParams={params} />
     </div>
   );
 }

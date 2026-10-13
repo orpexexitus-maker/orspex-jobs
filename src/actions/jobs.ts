@@ -21,7 +21,14 @@ export type JobState = {
   fieldErrors?: Record<string, string>;
 };
 
-// ─── Job Creation ────────────────────────────────────────────────────────
+export type JobFilters = {
+  q?: string;
+  country?: string;
+  city?: string;
+  title?: string;
+};
+
+// ─── Create Job ──────────────────────────────────────────────────────────
 export async function createJob(
   prevState: JobState,
   formData: FormData
@@ -64,10 +71,26 @@ export async function createJob(
   redirect("/dashboard");
 }
 
-// ─── Job Fetching ────────────────────────────────────────────────────────
-export async function getJobs() {
+// ─── Fetch Jobs (with filters) ───────────────────────────────────────────
+export async function getJobs(filters: JobFilters = {}) {
+  const where: Record<string, unknown> = { isActive: true };
+
+  if (filters.q) {
+    where.OR = [
+      { title: { contains: filters.q, mode: "insensitive" } },
+      { description: { contains: filters.q, mode: "insensitive" } },
+      { location: { contains: filters.q, mode: "insensitive" } },
+    ];
+  }
+
+  if (filters.country) where.country = filters.country;
+  if (filters.city) where.city = filters.city;
+  if (filters.title) {
+    where.title = { contains: filters.title, mode: "insensitive" };
+  }
+
   return prisma.job.findMany({
-    where: { isActive: true },
+    where,
     include: {
       employer: { select: { name: true, email: true } },
       company: {
@@ -85,6 +108,37 @@ export async function getJobs() {
   });
 }
 
+// ─── Fetch Filter Options ────────────────────────────────────────────────
+export async function getJobFilterOptions() {
+  const [countries, cities, titles] = await Promise.all([
+    prisma.job.findMany({
+      where: { isActive: true },
+      select: { country: true },
+      distinct: ["country"],
+      orderBy: { country: "asc" },
+    }),
+    prisma.job.findMany({
+      where: { isActive: true },
+      select: { city: true },
+      distinct: ["city"],
+      orderBy: { city: "asc" },
+    }),
+    prisma.job.findMany({
+      where: { isActive: true },
+      select: { title: true },
+      distinct: ["title"],
+      orderBy: { title: "asc" },
+    }),
+  ]);
+
+  return {
+    countries: countries.map((c) => c.country).filter(Boolean),
+    cities: cities.map((c) => c.city).filter(Boolean),
+    titles: titles.map((t) => t.title).filter(Boolean),
+  };
+}
+
+// ─── Fetch Single Job ────────────────────────────────────────────────────
 export async function getJob(id: string) {
   return prisma.job.findUnique({
     where: { id },
@@ -104,7 +158,7 @@ export async function getJob(id: string) {
   });
 }
 
-// ─── Applications ────────────────────────────────────────────────────────
+// ─── Apply to Job ────────────────────────────────────────────────────────
 export async function applyToJob(jobId: string, coverNote?: string) {
   const session = await auth();
   if (!session?.user) return { error: "Not authenticated" };
@@ -130,6 +184,7 @@ export async function applyToJob(jobId: string, coverNote?: string) {
   }
 }
 
+// ─── Employer: Job + Applicants ──────────────────────────────────────────
 export async function getJobWithApplicants(jobId: string) {
   const session = await auth();
   if (!session?.user) return null;
@@ -150,7 +205,18 @@ export async function getJobWithApplicants(jobId: string) {
       },
       applications: {
         include: {
-          seeker: { select: { id: true, name: true, email: true } },
+          seeker: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              country: true,
+              city: true,
+              skills: true,
+              resumeUrl: true,
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
       },
@@ -169,6 +235,7 @@ export async function getJobWithApplicants(jobId: string) {
   return job;
 }
 
+// ─── Update Application Status ───────────────────────────────────────────
 export async function updateApplicationStatus(
   applicationId: string,
   status: "APPLIED" | "REVIEWING" | "INTERVIEW" | "HIRED" | "REJECTED"

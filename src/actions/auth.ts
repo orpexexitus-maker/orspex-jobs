@@ -54,7 +54,7 @@ export async function registerUser(
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/dashboard",
+      redirectTo: role === "EMPLOYER" ? "/company" : "/profile",
     });
   } catch (error) {
     if (error instanceof AuthError) {

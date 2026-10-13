@@ -85,6 +85,8 @@ model Company {
   city            String
   registrationNo  String?
   website         String?
+  industry        String?
+  size            String?
   emailDomain     String?
   emailVerified   Boolean  @default(false)
   docVerified     Boolean  @default(false)

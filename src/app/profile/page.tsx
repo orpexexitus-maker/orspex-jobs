@@ -16,7 +16,10 @@ async function ProfileContent() {
   }
 
   const role = (session.user as { role?: string }).role;
-  if (role !== "SEEKER") {
+
+  // Only SEEKERS can access this page.
+  // Anyone else (EMPLOYER, undefined, etc.) goes to dashboard.
+  if (!role || role !== "SEEKER") {
     redirect("/dashboard");
   }
 

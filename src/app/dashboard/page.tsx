@@ -73,14 +73,22 @@ async function EmployerDashboard() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
         <h2 className="text-xl font-semibold">My posted jobs</h2>
-        <Link
-          href="/jobs/new"
-          className="bg-blue-600 text-white rounded px-4 py-2 text-sm hover:bg-blue-700"
-        >
-          + Post a job
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/company"
+            className="text-blue-600 text-sm hover:underline font-medium"
+          >
+            Edit company →
+          </Link>
+          <Link
+            href="/jobs/new"
+            className="bg-blue-600 text-white rounded px-4 py-2 text-sm hover:bg-blue-700"
+          >
+            + Post a job
+          </Link>
+        </div>
       </div>
 
       {jobs.length === 0 ? (
@@ -136,8 +144,15 @@ async function DashboardContent() {
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
           <Logo />
           <nav className="flex gap-4 text-sm">
-            <Link href="/jobs" className="text-gray-600 hover:text-gray-900">Jobs</Link>
-            <Link href="/dashboard" className="text-blue-600 font-medium">Dashboard</Link>
+            <Link href="/jobs" className="text-gray-600 hover:text-gray-900">
+              Jobs
+            </Link>
+            <Link
+              href="/dashboard"
+              className="text-blue-600 font-medium"
+            >
+              Dashboard
+            </Link>
           </nav>
         </div>
       </header>

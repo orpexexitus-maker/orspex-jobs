@@ -1,74 +1,94 @@
 ﻿"use client";
 
-import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { registerUser, type RegisterState } from "@/actions/auth";
+import { Suspense } from "react";
+import { RegisterForm } from "./register-form";
 
-const initialState: RegisterState = {};
+function RegisterContent() {
+  const searchParams = useSearchParams();
+  const roleParam = searchParams.get("role");
+
+  const role: "SEEKER" | "EMPLOYER" | null =
+    roleParam === "seeker"
+      ? "SEEKER"
+      : roleParam === "employer"
+      ? "EMPLOYER"
+      : null;
+
+  // No role yet — show the two role cards
+  if (!role) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+        <div className="w-full max-w-3xl">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2">Join Orspex Jobs</h1>
+            <p className="text-gray-600">
+              What would you like to do?
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Job Seeker card — entire card is a link */}
+            <Link
+              href="/register?role=seeker"
+              className="group block bg-white border-2 border-gray-200 hover:border-blue-500 rounded-2xl p-8 transition hover:shadow-xl cursor-pointer"
+            >
+              <div className="text-5xl mb-4">🔍</div>
+              <h2 className="text-2xl font-bold mb-2 text-gray-900">
+                Find work
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                I&apos;m looking for a job
+              </p>
+              <span className="inline-block text-blue-600 font-medium group-hover:translate-x-1 transition-transform">
+                Register as Job Seeker →
+              </span>
+            </Link>
+
+            {/* Employer card — entire card is a link */}
+            <Link
+              href="/register?role=employer"
+              className="group block bg-white border-2 border-gray-200 hover:border-blue-500 rounded-2xl p-8 transition hover:shadow-xl cursor-pointer"
+            >
+              <div className="text-5xl mb-4">💼</div>
+              <h2 className="text-2xl font-bold mb-2 text-gray-900">
+                Hire talent
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                I&apos;m hiring for my company
+              </p>
+              <span className="inline-block text-blue-600 font-medium group-hover:translate-x-1 transition-transform">
+                Register as Employer →
+              </span>
+            </Link>
+          </div>
+
+          <p className="mt-8 text-sm text-center text-gray-600">
+            Already have an account?{" "}
+            <Link href="/login" className="text-blue-600 hover:underline">
+              Log in
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Role is set — show the form
+  return <RegisterForm role={role} />;
+}
 
 export default function RegisterPage() {
-  const [state, formAction, pending] = useActionState(registerUser, initialState);
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow p-8">
-        <h1 className="text-2xl font-bold mb-6 text-center">Create an account</h1>
-
-        {state.error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded text-sm">
-            {state.error}
-          </div>
-        )}
-
-        <form action={formAction} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Name</label>
-            <input name="name" type="text" required className="w-full border rounded px-3 py-2" />
-            {state.fieldErrors?.name && (
-              <p className="text-red-600 text-xs mt-1">{state.fieldErrors.name}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
-            <input name="email" type="email" required className="w-full border rounded px-3 py-2" />
-            {state.fieldErrors?.email && (
-              <p className="text-red-600 text-xs mt-1">{state.fieldErrors.email}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Password</label>
-            <input name="password" type="password" required minLength={6} className="w-full border rounded px-3 py-2" />
-            {state.fieldErrors?.password && (
-              <p className="text-red-600 text-xs mt-1">{state.fieldErrors.password}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">I am a</label>
-            <select name="role" required className="w-full border rounded px-3 py-2">
-              <option value="SEEKER">Job Seeker</option>
-              <option value="EMPLOYER">Employer</option>
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            disabled={pending}
-            className="w-full bg-blue-600 text-white rounded py-2 font-medium hover:bg-blue-700 disabled:opacity-50"
-          >
-            {pending ? "Creating account..." : "Register"}
-          </button>
-        </form>
-
-        <p className="mt-4 text-sm text-center text-gray-600">
-          Already have an account?{" "}
-          <Link href="/login" className="text-blue-600 hover:underline">
-            Log in
-          </Link>
-        </p>
-      </div>
-    </div>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-8 text-center text-gray-500">
+          Loading...
+        </div>
+      }
+    >
+      <RegisterContent />
+    </Suspense>
   );
 }

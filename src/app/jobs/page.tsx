@@ -2,9 +2,11 @@ import { Suspense } from "react";
 import { Logo } from "@/components/logo";
 import Link from "next/link";
 import { getJobs } from "@/actions/jobs";
+import { auth } from "@/lib/auth";
 import { formatSalary, timeAgo } from "@/lib/format";
 
 async function JobsList() {
+  const session = await auth();
   const jobs = await getJobs();
 
   if (jobs.length === 0) {
@@ -15,34 +17,63 @@ async function JobsList() {
     );
   }
 
+  const isSeeker = session?.user?.role === "SEEKER";
+
   return (
     <div className="space-y-4">
       {jobs.map((job) => (
-        <Link
+        <div
           key={job.id}
-          href={`/jobs/${job.id}`}
-          className="block bg-white rounded-lg shadow hover:shadow-md transition p-6"
+          className="bg-white rounded-lg shadow hover:shadow-md transition p-6"
         >
-          <div className="flex items-start justify-between gap-4 mb-2">
-            <div>
-              <h2 className="text-xl font-semibold mb-1">{job.title}</h2>
-              <p className="text-gray-600 text-sm">
-                {job.employer.name} · {job.location}
+          <div className="flex items-start justify-between gap-6">
+            <Link
+              href={`/jobs/${job.id}`}
+              className="flex-1 min-w-0 block"
+            >
+              <h2 className="text-xl font-semibold mb-1 hover:text-blue-600 transition-colors">
+                {job.title}
+              </h2>
+              <p className="text-gray-600 text-sm mb-2">
+                {job.company?.name ?? job.employer.name} · {job.location}
               </p>
+              <p className="text-gray-700 text-sm line-clamp-2">
+                {job.description}
+              </p>
+              <p className="text-sm text-green-700 mt-3 font-medium">
+                {formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency)}
+              </p>
+              <p className="text-xs text-gray-400 mt-2">
+                {timeAgo(job.createdAt)}
+              </p>
+            </Link>
+
+            <div className="flex-shrink-0">
+              {isSeeker ? (
+                <Link
+                  href={`/jobs/${job.id}/apply`}
+                  className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium text-sm"
+                >
+                  Apply
+                </Link>
+              ) : !session?.user ? (
+                <Link
+                  href={`/login?callbackUrl=/jobs/${job.id}`}
+                  className="inline-block border border-blue-600 text-blue-600 px-6 py-3 rounded-lg hover:bg-blue-50 transition font-medium text-sm"
+                >
+                  Sign in to apply
+                </Link>
+              ) : (
+                <Link
+                  href={`/jobs/${job.id}`}
+                  className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition font-medium text-sm"
+                >
+                  View job
+                </Link>
+              )}
             </div>
-            <span className="text-xs text-gray-500 whitespace-nowrap">
-              {timeAgo(job.createdAt)}
-            </span>
           </div>
-
-          <p className="text-gray-700 text-sm line-clamp-2">
-            {job.description}
-          </p>
-
-          <p className="text-sm text-green-700 font-medium mt-3">
-            {formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency)}
-          </p>
-        </Link>
+        </div>
       ))}
     </div>
   );

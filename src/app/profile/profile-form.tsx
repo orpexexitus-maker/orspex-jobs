@@ -5,6 +5,7 @@ import Link from "next/link";
 import { updateProfile, type ProfileState } from "@/actions/profile";
 import { CountrySelect } from "@/components/country-select";
 import { SkillsInput } from "@/components/skills-input";
+import { ResumeUpload } from "./resume-upload";
 
 const initialState: ProfileState = {};
 
@@ -37,7 +38,7 @@ export function ProfileForm({ profile }: { profile: ProfileData }) {
 
       {state.success && (
         <div className="mb-4 p-3 bg-green-50 text-green-700 rounded text-sm">
-          ✓ Profile saved successfully
+          Profile saved successfully
         </div>
       )}
 
@@ -155,7 +156,7 @@ export function ProfileForm({ profile }: { profile: ProfileData }) {
             rows={5}
             maxLength={500}
             defaultValue={profile.bio ?? ""}
-            placeholder="Brief introduction — your background, what you're looking for, what makes you a good fit..."
+            placeholder="Brief introduction - your background, what you're looking for, what makes you a good fit..."
             className="w-full border rounded px-3 py-2"
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -163,12 +164,17 @@ export function ProfileForm({ profile }: { profile: ProfileData }) {
           </p>
         </div>
 
+        {/* CV Upload Section */}
+        <div className="pt-4 border-t">
+          <ResumeUpload initialUrl={profile.resumeUrl} />
+        </div>
+
         <div className="pt-4 border-t flex justify-between items-center gap-3">
           <Link
             href="/dashboard"
             className="text-gray-600 hover:text-gray-900 text-sm"
           >
-            ← Back to dashboard
+            Back to dashboard
           </Link>
           <button
             type="submit"

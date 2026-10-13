@@ -21,6 +21,7 @@ export type JobState = {
   fieldErrors?: Record<string, string>;
 };
 
+// ─── Job Creation ────────────────────────────────────────────────────────
 export async function createJob(
   prevState: JobState,
   formData: FormData
@@ -63,10 +64,23 @@ export async function createJob(
   redirect("/dashboard");
 }
 
+// ─── Job Fetching ────────────────────────────────────────────────────────
 export async function getJobs() {
   return prisma.job.findMany({
     where: { isActive: true },
-    include: { employer: { select: { name: true, email: true } } },
+    include: {
+      employer: { select: { name: true, email: true } },
+      company: {
+        select: {
+          id: true,
+          name: true,
+          industry: true,
+          size: true,
+          website: true,
+          verified: true,
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 }
@@ -74,10 +88,23 @@ export async function getJobs() {
 export async function getJob(id: string) {
   return prisma.job.findUnique({
     where: { id },
-    include: { employer: { select: { name: true, email: true } } },
+    include: {
+      employer: { select: { name: true, email: true } },
+      company: {
+        select: {
+          id: true,
+          name: true,
+          industry: true,
+          size: true,
+          website: true,
+          verified: true,
+        },
+      },
+    },
   });
 }
 
+// ─── Applications ────────────────────────────────────────────────────────
 export async function applyToJob(jobId: string, coverNote?: string) {
   const session = await auth();
   if (!session?.user) return { error: "Not authenticated" };
@@ -111,6 +138,16 @@ export async function getJobWithApplicants(jobId: string) {
     where: { id: jobId },
     include: {
       employer: { select: { id: true, name: true, email: true } },
+      company: {
+        select: {
+          id: true,
+          name: true,
+          industry: true,
+          size: true,
+          website: true,
+          verified: true,
+        },
+      },
       applications: {
         include: {
           seeker: { select: { id: true, name: true, email: true } },
@@ -160,6 +197,7 @@ export async function updateApplicationStatus(
   return { success: true };
 }
 
+// ─── Dashboard Queries ───────────────────────────────────────────────────
 export async function getMyApplications() {
   const session = await auth();
   if (!session?.user) return [];
@@ -173,6 +211,7 @@ export async function getMyApplications() {
       job: {
         include: {
           employer: { select: { name: true } },
+          company: { select: { name: true, verified: true } },
         },
       },
     },
@@ -190,6 +229,7 @@ export async function getMyJobs() {
   return prisma.job.findMany({
     where: { employerId: session.user.id as string },
     include: {
+      company: { select: { name: true, verified: true } },
       _count: { select: { applications: true } },
     },
     orderBy: { createdAt: "desc" },

@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { LoginPanel } from "./login-panel";
+import { prisma } from "@/lib/prisma";
+import { formatSalary } from "@/lib/format";
 
 export default async function HomePage() {
   const session = await auth();
@@ -10,27 +12,27 @@ export default async function HomePage() {
     redirect("/dashboard");
   }
 
+  // Fetch 6 latest active jobs for the homepage
+  const recentJobs = await prisma.job.findMany({
+    where: { isActive: true },
+    orderBy: { createdAt: "desc" },
+    take: 6,
+    include: { company: true },
+  });
+
   return (
     <div className="min-h-screen relative overflow-hidden bg-white">
       {/* Background Elements */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        {/* Grid Pattern */}
-        <div 
-          className="absolute inset-0 opacity-[0.03]" 
+        <div
+          className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
-            backgroundSize: '40px 40px'
+            backgroundSize: "40px 40px",
           }}
         />
-        
-        {/* Gradient Blobs */}
-        {/* Top Left Purple/Blue Blob */}
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] bg-gradient-to-br from-indigo-200/40 to-blue-200/40 rounded-full blur-3xl" />
-        
-        {/* Center Blue Glow */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-blue-100/30 rounded-full blur-3xl" />
-        
-        {/* Bottom Right Green/Blue Blob */}
         <div className="absolute -bottom-40 -right-40 w-[600px] h-[600px] bg-gradient-to-tl from-emerald-100/40 to-blue-100/40 rounded-full blur-3xl" />
       </div>
 
@@ -39,19 +41,19 @@ export default async function HomePage() {
         <header className="border-b bg-white/70 backdrop-blur sticky top-0 z-20">
           <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
             <Link href="/" className="flex items-center gap-2">
-              {/* Custom CSS Logo to match screenshot */}
               <div className="relative w-8 h-8 flex items-center justify-center">
                 <div className="absolute inset-0 border-2 border-green-400 rounded-full"></div>
                 <div className="absolute inset-1 border-2 border-blue-400 rounded-full"></div>
                 <div className="absolute inset-2 bg-blue-600 rounded-full"></div>
                 <div className="absolute inset-3 bg-slate-900 rounded-full"></div>
-                {/* Dots */}
                 <div className="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
                 <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
                 <div className="absolute top-1/2 -left-0.5 -translate-y-1/2 w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                 <div className="absolute top-1/2 -right-0.5 -translate-y-1/2 w-1.5 h-1.5 bg-green-500 rounded-full"></div>
               </div>
-              <span className="text-xl font-bold tracking-tight text-slate-900">Orspex Jobs</span>
+              <span className="text-xl font-bold tracking-tight text-slate-900">
+                Orspex Jobs
+              </span>
             </Link>
             <nav className="flex gap-4 text-sm items-center">
               <Link href="/jobs" className="text-gray-600 hover:text-gray-900 font-medium">
@@ -91,7 +93,6 @@ export default async function HomePage() {
                 no endless forms. Just real work.
               </p>
 
-              {/* Two role cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Link
                   href="/register?role=seeker"
@@ -102,12 +103,8 @@ export default async function HomePage() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </div>
-                  <h2 className="text-lg font-bold mb-1 text-gray-900">
-                    Find work
-                  </h2>
-                  <p className="text-sm text-gray-500 mb-4">
-                    I&apos;m looking for a job
-                  </p>
+                  <h2 className="text-lg font-bold mb-1 text-gray-900">Find work</h2>
+                  <p className="text-sm text-gray-500 mb-4">I&apos;m looking for a job</p>
                   <span className="inline-flex items-center text-blue-600 text-sm font-semibold group-hover:translate-x-1 transition-transform">
                     Get started as Job Seeker
                     <svg className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -125,12 +122,8 @@ export default async function HomePage() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <h2 className="text-lg font-bold mb-1 text-gray-900">
-                    Hire talent
-                  </h2>
-                  <p className="text-sm text-gray-500 mb-4">
-                    I&apos;m hiring for my company
-                  </p>
+                  <h2 className="text-lg font-bold mb-1 text-gray-900">Hire talent</h2>
+                  <p className="text-sm text-gray-500 mb-4">I&apos;m hiring for my company</p>
                   <span className="inline-flex items-center text-blue-600 text-sm font-semibold group-hover:translate-x-1 transition-transform">
                     Get started as Employer
                     <svg className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -146,6 +139,67 @@ export default async function HomePage() {
               <LoginPanel />
             </div>
           </div>
+        </section>
+
+        {/* Latest Jobs Section */}
+        <section className="max-w-7xl mx-auto px-6 pb-16">
+          <div className="flex justify-between items-end mb-8">
+            <div>
+              <h2 className="text-3xl font-bold text-slate-900">Latest Opportunities</h2>
+              <p className="text-gray-600 mt-2">
+                Discover your next role at top companies.
+              </p>
+            </div>
+            <Link href="/jobs" className="text-blue-600 font-medium hover:underline">
+              View all jobs →
+            </Link>
+          </div>
+
+          {recentJobs.length === 0 ? (
+            <div className="text-center py-16 bg-white/60 backdrop-blur border border-gray-200 rounded-2xl">
+              <p className="text-gray-500">No jobs posted yet. Check back soon!</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recentJobs.map((job) => (
+                <Link
+                  key={job.id}
+                  href={`/jobs/${job.id}`}
+                  className="group block bg-white border border-gray-200 rounded-2xl p-6 hover:shadow-lg hover:border-blue-300 transition-all"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-semibold bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
+                      {job.priority}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {new Date(job.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                    {job.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm mt-1">
+                    {job.company?.name ?? "Unknown Company"}
+                  </p>
+                  <div className="mt-4 flex items-center gap-2 text-sm text-gray-500">
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {job.location}
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
+                    <span className="text-sm font-semibold text-slate-900">
+                      {formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency)}
+                    </span>
+                    <span className="text-blue-600 text-sm font-medium group-hover:translate-x-1 transition-transform">
+                      Apply →
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Feature cards */}

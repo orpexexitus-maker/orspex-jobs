@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { Logo } from "@/components/logo";
 import Link from "next/link";
 import { getJobs } from "@/actions/jobs";
+import { formatSalary, timeAgo } from "@/lib/format";
 
 async function JobsList() {
   const jobs = await getJobs();
@@ -22,18 +23,25 @@ async function JobsList() {
           href={`/jobs/${job.id}`}
           className="block bg-white rounded-lg shadow hover:shadow-md transition p-6"
         >
-          <h2 className="text-xl font-semibold mb-1">{job.title}</h2>
-          <p className="text-gray-600 text-sm mb-2">
-            {job.employer.name} · {job.location}
-          </p>
+          <div className="flex items-start justify-between gap-4 mb-2">
+            <div>
+              <h2 className="text-xl font-semibold mb-1">{job.title}</h2>
+              <p className="text-gray-600 text-sm">
+                {job.employer.name} · {job.location}
+              </p>
+            </div>
+            <span className="text-xs text-gray-500 whitespace-nowrap">
+              {timeAgo(job.createdAt)}
+            </span>
+          </div>
+
           <p className="text-gray-700 text-sm line-clamp-2">
             {job.description}
           </p>
-          {job.salaryMin && job.salaryMax && (
-            <p className="text-sm text-green-700 mt-3">
-              ${job.salaryMin.toLocaleString()} – ${job.salaryMax.toLocaleString()}
-            </p>
-          )}
+
+          <p className="text-sm text-green-700 font-medium mt-3">
+            {formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency)}
+          </p>
         </Link>
       ))}
     </div>
@@ -47,8 +55,12 @@ export default function JobsPage() {
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
           <Logo />
           <nav className="flex gap-4 text-sm">
-            <Link href="/jobs" className="text-blue-600 font-medium">Jobs</Link>
-            <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">Dashboard</Link>
+            <Link href="/jobs" className="text-blue-600 font-medium">
+              Jobs
+            </Link>
+            <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
+              Dashboard
+            </Link>
           </nav>
         </div>
       </header>

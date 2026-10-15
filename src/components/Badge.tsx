@@ -1,6 +1,5 @@
-﻿// src/components/Badge.tsx
+// src/components/Badge.tsx
 import * as React from "react";
-import { computeHireFasterScore } from "@/lib/hireFasterScore";
 
 type BadgeVariant =
   | "verified"
@@ -18,12 +17,12 @@ type BadgeProps = {
 };
 
 const STYLES: Record<BadgeVariant, { classes: string; icon: string; label: string }> = {
-  verified:   { classes: "bg-blue-50 text-blue-700 ring-blue-200",         icon: "✅", label: "Verified" },
-  visa:       { classes: "bg-green-50 text-green-700 ring-green-200",      icon: "✅", label: "Visa Sponsorship" },
-  relocation: { classes: "bg-purple-50 text-purple-700 ring-purple-200",   icon: "✅", label: "Relocation" },
-  remote:     { classes: "bg-cyan-50 text-cyan-700 ring-cyan-200",         icon: "✅", label: "Remote" },
-  fast:       { classes: "bg-orange-50 text-orange-700 ring-orange-200",   icon: "⚡", label: "Fast Response" },
-  featured:   { classes: "bg-yellow-50 text-yellow-800 ring-yellow-200",   icon: "⭐", label: "Featured" },
+  verified:   { classes: "bg-blue-50 text-blue-700 ring-blue-200",          icon: "✅", label: "Verified" },
+  visa:       { classes: "bg-green-50 text-green-700 ring-green-200",       icon: "✅", label: "Visa Sponsorship" },
+  relocation: { classes: "bg-purple-50 text-purple-700 ring-purple-200",    icon: "✅", label: "Relocation" },
+  remote:     { classes: "bg-cyan-50 text-cyan-700 ring-cyan-200",          icon: "✅", label: "Remote" },
+  fast:       { classes: "bg-orange-50 text-orange-700 ring-orange-200",    icon: "⚡", label: "Fast Response" },
+  featured:   { classes: "bg-yellow-50 text-yellow-800 ring-yellow-200",    icon: "⭐", label: "Featured" },
   salary:     { classes: "bg-emerald-50 text-emerald-700 ring-emerald-200", icon: "💰", label: "Salary Disclosed" },
 };
 
@@ -38,30 +37,20 @@ export function Badge({ variant, children, size = "sm" }: BadgeProps) {
   );
 }
 
-// ─── Hire Faster badge (updated for response-time tiers) ───────────────
-const COLOR_CLASSES: Record<string, string> = {
-  gray:    "bg-gray-100 text-gray-600 ring-gray-200",
-  green:   "bg-green-100 text-green-700 ring-green-200",
-  emerald: "bg-emerald-100 text-emerald-700 ring-emerald-200",
-  amber:   "bg-amber-100 text-amber-800 ring-amber-200",
-  orange:  "bg-orange-100 text-orange-700 ring-orange-200",
-  red:     "bg-red-100 text-red-700 ring-red-200",
-};
-
-// Keep the old API working (accept a numeric score)…
+// ─── Hire Faster badge with response-time color tiers ────────────────
 export function HireFasterBadge({ score }: { score: number }) {
-  // Fallback: if we only have a score, map it to the same tiers.
-  let color: keyof typeof COLOR_CLASSES = "gray";
+  let cls   = "bg-gray-100 text-gray-600 ring-gray-200";
   let label = "New";
-  if (score >= 80)      { color = "green";   label = "Fast Hire"; }
-  else if (score >= 60) { color = "emerald"; label = "Responds Same Day"; }
-  else if (score >= 40) { color = "amber";   label = "Moderate"; }
-  else if (score >= 20) { color = "orange";  label = "Slow"; }
-  else                  { color = "red";     label = "Very Slow"; }
+
+  if (score >= 90)      { cls = "bg-green-100 text-green-700 ring-green-200";       label = "Responds Same Day"; }
+  else if (score >= 75) { cls = "bg-emerald-100 text-emerald-700 ring-emerald-200"; label = "Fast Hire"; }
+  else if (score >= 50) { cls = "bg-amber-100 text-amber-800 ring-amber-200";       label = "Moderate"; }
+  else if (score >= 25) { cls = "bg-orange-100 text-orange-700 ring-orange-200";    label = "Slow"; }
+  else                  { cls = "bg-red-100 text-red-700 ring-red-200";             label = "Very Slow"; }
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full ring-1 font-semibold text-xs px-2.5 py-1 ${COLOR_CLASSES[color]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full ring-1 font-semibold text-xs px-2.5 py-1 ${cls}`}
       title={`Hire Faster Score: ${score}/100`}
     >
       <span className="font-bold">{score}</span>

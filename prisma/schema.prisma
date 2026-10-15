@@ -8,17 +8,24 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// ─────────────────────────────────────────────────────────────
+// ENUMS  (existing + extended)
+// ─────────────────────────────────────────────────────────────
+
 enum Role {
   SEEKER
   EMPLOYER
+  ADMIN
 }
 
 enum ApplicationStatus {
   APPLIED
   REVIEWING
   INTERVIEW
+  OFFER
   HIRED
   REJECTED
+  WITHDRAWN
 }
 
 enum Currency {
@@ -54,6 +61,66 @@ enum JobPriority {
   IMMEDIATE
 }
 
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  TEMPORARY
+  INTERNSHIP
+  FREELANCE
+}
+
+enum ExperienceLevel {
+  INTERN
+  ENTRY
+  MID
+  SENIOR
+  LEAD
+  EXECUTIVE
+}
+
+enum JobStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  CLOSED
+  EXPIRED
+}
+
+enum EmployerPlan {
+  FREE
+  STARTER
+  PRO
+  ENTERPRISE
+}
+
+enum AlertChannel {
+  EMAIL
+  TELEGRAM
+  WHATSAPP
+  PUSH
+}
+
+enum ServiceType {
+  CV_BUILD
+  CV_REVIEW
+  COVER_LETTER
+  INTERVIEW_PREP
+  LINKEDIN_REVIEW
+  CAREER_COACHING
+}
+
+enum ServiceStatus {
+  PENDING
+  IN_PROGRESS
+  DELIVERED
+  CANCELLED
+}
+
+// ─────────────────────────────────────────────────────────────
+// USER  (extended — old fields preserved)
+// ─────────────────────────────────────────────────────────────
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -61,8 +128,9 @@ model User {
   passwordHash String
   role         Role
   createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt @default(now())
 
-  // Seeker profile fields
+  // ── Existing seeker fields (kept) ──
   phone        String?
   country      String?
   city         String?
@@ -72,15 +140,45 @@ model User {
   education    String?
   resumeUrl    String?
 
-  // Relations
+  // ── New seeker fields (for AI matching + marketplace) ──
+  locale             String   @default("en")
+  languages          String[]
+  certifications     String[]
+  preferredCountries String[]
+  visaStatus         String?
+  remoteOnly         Boolean  @default(false)
+  salaryExpectMin    Int?
+  salaryExpectMax    Int?
+  salaryCurrency     Currency @default(USD)
+  linkedinUrl        String?
+  portfolioUrl       String?
+  openToWork         Boolean  @default(true)
+
+  // ── Relations (existing) ──
   company      Company?
   jobs         Job[]         @relation("EmployerJobs")
   applications Application[] @relation("SeekerApplications")
+
+  // ── Relations (new) ──
+  savedJobs    SavedJob[]
+  jobAlerts    JobAlert[]
+  cvs          Cv[]
+  reviews      EmployerReview[]
+  serviceOrders CareerServiceOrder[]
+  candidateUnlocks CandidateUnlock[]
+
+  @@index([role])
+  @@index([openToWork])
 }
+
+// ─────────────────────────────────────────────────────────────
+// COMPANY  (extended — old fields preserved)
+// ─────────────────────────────────────────────────────────────
 
 model Company {
   id              String   @id @default(cuid())
   name            String
+  slug            String?  @unique
   country         String
   city            String
   registrationNo  String?
@@ -96,10 +194,41 @@ model Company {
   owner           User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   jobs            Job[]
   createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt @default(now())
+
+  // ── New verification + badge fields ──
+  logoUrl          String?
+  about            String?
+  verifiedAt       DateTime?
+  recruiterName    String?
+  recruiterEmail   String?
+  recruiterPhone   String?
+
+  // Badge flags (drive ✅ badges on job cards)
+  visaSponsor      Boolean  @default(false)
+  relocationAssist Boolean  @default(false)
+  remoteFriendly   Boolean  @default(false)
+  fastResponder    Boolean  @default(false)
+
+  // Plan / billing
+  plan             EmployerPlan @default(FREE)
+  planRenewsAt     DateTime?
+
+  // Relations (new)
+  reviews          EmployerReview[]
+  featuredJobs     FeaturedJob[]
+
+  @@index([country])
+  @@index([verified])
 }
+
+// ─────────────────────────────────────────────────────────────
+// JOB  (heavily extended — old fields preserved)
+// ─────────────────────────────────────────────────────────────
 
 model Job {
   id              String        @id @default(cuid())
+  slug            String?       @unique
   title           String
   description     String
   country         String
@@ -119,12 +248,69 @@ model Job {
 
   applications    Application[]
   createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt @default(now())
+
+  // ── NEW: core Orspex differentiators ──
+  visaSponsorship Boolean         @default(false)
+  relocationAssist Boolean        @default(false)
+  freeVisa        Boolean         @default(false)
+  accommodation   Boolean         @default(false)
+
+  remote          Boolean         @default(false)
+  hybrid          Boolean         @default(false)
+
+  // ── NEW: classification ──
+  jobType         JobType         @default(FULL_TIME)
+  experienceLevel ExperienceLevel @default(MID)
+  category        String?
+  skills          String[]
+  languages       String[]        @default(["en"])
+
+  // ── NEW: compensation detail ──
+  salaryPeriod    String          @default("year")
+  salaryDisclosed Boolean         @default(false)
+
+  // ── NEW: hiring signals (feed Hire Faster Score) ──
+  requirements      String?
+  responsibilities  String?
+  interviewProcess  String?
+  responseDays      Int?
+  applicantsCount   Int             @default(0)
+  viewsCount        Int             @default(0)
+
+  // ── NEW: computed score 0-100 ──
+  hireFasterScore   Int             @default(0)
+
+  // ── NEW: publishing + aggregation ──
+  status          JobStatus       @default(ACTIVE)
+  featured        Boolean         @default(false)
+  featuredUntil   DateTime?
+  sourceUrl       String?
+  sourceName      String?
+  externalId      String?
+  expiresAt       DateTime?
+  publishedAt     DateTime?
+
+  // ── NEW relations ──
+  savedBy         SavedJob[]
+  alerts          JobAlert[]
+  featuredRef     FeaturedJob?
 
   @@index([country])
   @@index([city])
   @@index([isActive])
   @@index([priority])
+  @@index([visaSponsorship])
+  @@index([remote])
+  @@index([status, publishedAt])
+  @@index([hireFasterScore])
+  @@index([sourceName, externalId])
+  @@unique([sourceName, externalId])
 }
+
+// ─────────────────────────────────────────────────────────────
+// APPLICATION  (extended — old fields preserved)
+// ─────────────────────────────────────────────────────────────
 
 model Application {
   id         String            @id @default(cuid())
@@ -136,8 +322,215 @@ model Application {
   job        Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
   seeker     User              @relation("SeekerApplications", fields: [seekerId], references: [id], onDelete: Cascade)
   createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
+  updatedAt  DateTime          @updatedAt @default(now())
+
+  // ── NEW ──
+  cvId         String?
+  matchScore   Int?
+  notes        String?
+  employerNote String?
 
   @@unique([jobId, seekerId])
   @@index([status])
+}
+
+// ─────────────────────────────────────────────────────────────
+// NEW MODELS — all the blueprint features
+// ─────────────────────────────────────────────────────────────
+
+model Cv {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fileName        String
+  fileUrl         String
+  rawText         String?
+  atsScore        Int?
+  missingKeywords String[]
+  suggestions     String[]
+  parsedJson      Json?
+
+  isPrimary       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt @default(now())
+
+  @@index([userId])
+}
+
+model SavedJob {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, jobId])
+}
+
+model JobAlert {
+  id              String          @id @default(cuid())
+  userId          String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId           String?
+  job             Job?            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  name            String?
+  keywords        String?
+  country         String?
+  city            String?
+  remote          Boolean         @default(false)
+  visaSponsorship Boolean         @default(false)
+  salaryMin       Int?
+  experienceLevel ExperienceLevel?
+  jobType         JobType?
+  channel         AlertChannel    @default(EMAIL)
+  frequency       String          @default("daily")
+  active          Boolean         @default(true)
+  lastSentAt      DateTime?
+  createdAt       DateTime        @default(now())
+
+  @@index([userId, active])
+}
+
+model FeaturedJob {
+  id          String   @id @default(cuid())
+  jobId       String   @unique
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  startsAt    DateTime @default(now())
+  endsAt      DateTime
+  priceCents  Int?
+  currency    Currency @default(USD)
+  paid        Boolean  @default(false)
+  paymentRef  String?
+
+  createdAt   DateTime @default(now())
+}
+
+model CountryGuide {
+  id               String   @id @default(cuid())
+  slug             String   @unique
+  name             String
+  flag             String?
+  summary          String?
+
+  visaRequirements String?
+  visaTypes        Json?
+  avgSalaries      Json?
+  costOfLiving     Json?
+  inDemandRoles    String[]
+  tips             String?
+
+  heroImage        String?
+  seoTitle         String?
+  seoDescription   String?
+
+  published        Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt @default(now())
+
+  @@index([published])
+}
+
+model EmployerReview {
+  id                 String   @id @default(cuid())
+  companyId          String
+  company            Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  rating             Int
+  interviewRating    Int?
+  responseRating     Int?
+  cultureRating      Int?
+  transparencyRating Int?
+
+  title              String?
+  body               String?
+  jobTitle           String?
+  wouldRecommend     Boolean?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt @default(now())
+
+  @@unique([companyId, userId])
+  @@index([companyId])
+}
+
+model CareerServiceOrder {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type        ServiceType
+  status      ServiceStatus @default(PENDING)
+
+  priceCents  Int
+  currency    Currency      @default(USD)
+  paid        Boolean       @default(false)
+  paymentRef  String?
+
+  inputData   Json?
+  outputData  Json?
+  deliveredAt DateTime?
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt @default(now())
+
+  @@index([userId])
+}
+
+model CandidateUnlock {
+  id         String   @id @default(cuid())
+  employerId String
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  priceCents Int
+  currency   Currency @default(USD)
+  unlockedAt DateTime @default(now())
+
+  @@unique([employerId, userId])
+}
+
+model Community {
+  id          String   @id @default(cuid())
+  platform    String
+  name        String
+  country     String?
+  category    String?
+  inviteUrl   String
+  memberCount Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([country])
+}
+
+model JobReport {
+  id         String   @id @default(cuid())
+  jobId      String
+  reportedBy String?
+  reason     String
+  notes      String?
+  resolved   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([resolved])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  action    String
+  entity    String
+  entityId  String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
 }
